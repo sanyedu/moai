@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Button, Image, Card, Flex, Typography, Space } from "antd";
+import { Button, Image, Card, Flex, Typography, Space, Input } from "antd";
 const { Title, Text } = Typography;
-import { useEffect, useState, useCallback } from "react";
-import { BaseType } from "antd/es/typography/Base";
+import { useEffect, useState, useRef } from "react";
+const { TextArea } = Input;
 
 const CARD_WIDTH = 500;
 const cardStyle: React.CSSProperties = {
@@ -23,18 +23,20 @@ interface Student {
     src: string;
 }
 
-interface Log {
-    type: BaseType | undefined;
-    text: string;
-}
-
 export default function Home({ params }: { params: { name: string } }) {
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [students, setStudents] = useState<Student[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(
         null
     );
-    const [logs, setLogs] = useState<Log[]>([]);
+    const [placeHolderText, setPlaceHolderText] = useState<string>("");
+    const [logs, setLogs] = useState<string[]>([]);
+    const [broadcastImage, setBroadcastImage] =
+        useState<string>("/placeholder.svg");
+    const [broadcastText, setBroadcastText] = useState<string>("");
+
+    const stateRef = useRef<string[]>();
+    stateRef.current = logs;
 
     useEffect(() => {
         fetch("/api/get-class-students?class=" + params.name)
@@ -48,12 +50,14 @@ export default function Home({ params }: { params: { name: string } }) {
     }, []);
 
     function logSuccess(msg: string) {
+        msg = new Date().toLocaleString() + " ok: " + msg;
         console.log(msg);
-        setLogs(logs.concat({ type: "success", text: msg }));
+        setLogs(stateRef.current!.concat([msg]));
     }
     function logError(msg: string) {
+        msg = new Date().toLocaleString() + " error: " + msg;
         console.log(msg);
-        setLogs(logs.concat({ type: "danger", text: msg }));
+        setLogs(stateRef.current!.concat([msg]));
     }
     function handleClick(
         event: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -61,12 +65,30 @@ export default function Home({ params }: { params: { name: string } }) {
         // Create WebSocket connection
         // const endpoint = process.env.NEXT_PUBLIC_WS_ENDPOINT! + "/" + params.name;
         const endpoint = process.env.NEXT_PUBLIC_WS_ENDPOINT_STUDENT!;
-        logSuccess(`ws connect. endpoint: ${endpoint}`);
+        logSuccess(`服务器连接成功: ${endpoint}`);
         const ws = new WebSocket(endpoint);
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                // if (data.name != params.name)
+                //     throw new Error(`${data.name} != ${params.name}`);
+                if (data.type == "BROADCAST_IMAGE") {
+                    if (!data.data) throw new Error(JSON.stringify(data));
+                    setBroadcastImage(data.data);
+                    logSuccess("收到广播图片");
+                }
+                if (data.type == "BROADCAST_TEXT") {
+                    if (!data.data) throw new Error(JSON.stringify(data));
+                    setBroadcastText(data.data);
+                    logSuccess("收到广播文字");
+                }
+            } catch (err) {
+                console.error("Error processing WebSocket message:", err);
+            }
+        };
         ws.onerror = (error) => {
             logError("WebSocket error:" + error);
         };
-
         ws.onclose = () => {
             logError("WebSocket connection closed");
         };
@@ -79,7 +101,6 @@ export default function Home({ params }: { params: { name: string } }) {
 
     function handlePaste(event: React.ClipboardEvent<HTMLTextAreaElement>) {
         const studentId = event.currentTarget.getAttribute("data-id");
-        logSuccess(`paste image. id=${studentId}`);
         const items = event.clipboardData.items;
         let blob: Blob | null = null;
 
@@ -92,7 +113,7 @@ export default function Home({ params }: { params: { name: string } }) {
             }
         }
         if (!blob) {
-            logError("no image.");
+            logError("剪贴板中没有图片");
             return;
         }
         if (!socket) {
@@ -110,12 +131,13 @@ export default function Home({ params }: { params: { name: string } }) {
             });
             socket.send(
                 JSON.stringify({
+                    type: "UPDATE_SINGLE_IMAGE",
                     name: params.name,
                     id: studentId,
-                    imageData: event.target?.result as string,
+                    data: event.target?.result as string,
                 })
             );
-            logSuccess(`update image for id: ${studentId}`);
+            logSuccess(`发送图片成功 id: ${studentId}`);
         };
         reader.readAsDataURL(blob);
     }
@@ -156,9 +178,11 @@ export default function Home({ params }: { params: { name: string } }) {
                             </Typography>
                             <textarea
                                 data-id={selectedStudent.id}
-                                placeholder="在这里粘贴图片"
+                                placeholder="使用Ctrl+V在这里粘贴图片"
                                 style={textareaPasteImgStyle}
                                 onPaste={handlePaste}
+                                onChange={(e) => setPlaceHolderText("")}
+                                value={placeHolderText}
                             ></textarea>
                             <Image
                                 alt={selectedStudent.id}
@@ -178,22 +202,56 @@ export default function Home({ params }: { params: { name: string } }) {
                     >
                         <Flex vertical={true}>
                             <Typography>
-                                <Title level={2}>操作日志</Title>
+                                <Title level={3}>操作日志</Title>
                             </Typography>
+                            <TextArea
+                                readOnly
+                                rows={25}
+                                style={{ resize: "none" }}
+                                value={logs.join("\n")}
+                            />
+                        </Flex>
+                    </Card>
+                </Flex>
+                <Flex wrap gap="small">
+                    <Card
+                        id="card"
+                        hoverable
+                        style={cardStyle}
+                        styles={{
+                            body: { padding: 5, overflow: "hidden" },
+                        }}
+                    >
+                        <Flex vertical={true}>
                             <Typography>
-                                <Title level={2}>
-                                    <Space direction="vertical">
-                                        {logs.map((log, index) => (
-                                            <Text
-                                                key={`text-${index}`}
-                                                type={log.type}
-                                            >
-                                                {log.text}
-                                            </Text>
-                                        ))}
-                                    </Space>
-                                </Title>
+                                <Title level={2}>图片广播</Title>
                             </Typography>
+                            <Image
+                                alt="图片广播"
+                                src={broadcastImage}
+                                width={CARD_WIDTH}
+                                height={CARD_WIDTH}
+                            />
+                        </Flex>
+                    </Card>
+                    <Card
+                        id="card"
+                        hoverable
+                        style={cardStyle}
+                        styles={{
+                            body: { padding: 5, overflow: "hidden" },
+                        }}
+                    >
+                        <Flex vertical={true}>
+                            <Typography>
+                                <Title level={2}>文本广播</Title>
+                            </Typography>
+                            <TextArea
+                                readOnly
+                                rows={25}
+                                style={{ resize: "none" }}
+                                value={broadcastText}
+                            />
                         </Flex>
                     </Card>
                 </Flex>

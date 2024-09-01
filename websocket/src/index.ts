@@ -1,9 +1,10 @@
 import WebSocket, { WebSocketServer } from 'ws'
 
-interface ImageDataMessage {
+interface DataMsg {
+  type: string
   name: string
   id: string
-  imageData: string
+  data: string
 }
 
 // Create a WebSocket server on port 8080
@@ -11,6 +12,21 @@ const wssTeacher = new WebSocketServer({ port: 8080 })
 
 wssTeacher.on('connection', (ws: WebSocket, req) => {
   console.log(`teacher connected on url: ${req.url}. total teachers: ${wssTeacher.clients.size}`)
+  ws.on('message', (message: string) => {
+    try {
+      const data: DataMsg = JSON.parse(message)
+      const messageToBroadcast = JSON.stringify(data)
+
+      wssStudent.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(messageToBroadcast)
+        }
+      })
+      console.log(`messages are sent to teacher. id: ${data.id}, name: ${data.name}`)
+    } catch (error) {
+      console.error('Failed to parse incoming message:', error)
+    }
+  })
 
   ws.on('close', () => {
     console.log('teacher client disconnected.')
@@ -29,7 +45,7 @@ wssStudent.on('connection', (ws: WebSocket, req) => {
   console.log(`student connected on url: ${req.url}. total students: ${wssStudent.clients.size}`)
   ws.on('message', (message: string) => {
     try {
-      const data: ImageDataMessage = JSON.parse(message)
+      const data: DataMsg = JSON.parse(message)
       const messageToBroadcast = JSON.stringify(data)
 
       wssTeacher.clients.forEach((client) => {
