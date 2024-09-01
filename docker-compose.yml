@@ -1,0 +1,40 @@
+services:
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: nginx
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+  #   depends_on:
+  #     - nextjs
+  #     - websocket
+  #   networks:
+  #     - app-network
+
+  nextjs:
+    build:
+      context: ./nextjs
+      dockerfile: Dockerfile
+    container_name: nextjs
+    ports:
+      - "30001:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app-network
+
+  websocket:
+    build:
+      context: ./websocket
+      dockerfile: Dockerfile
+    container_name: websocket
+    ports:
+      - "30002:8080"
+      - "30003:8081"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
