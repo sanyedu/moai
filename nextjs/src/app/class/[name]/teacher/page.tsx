@@ -6,7 +6,7 @@ const { Title, Paragraph, Text, Link } = Typography;
 import { useEffect, useState, useCallback } from "react";
 const { TextArea } = Input;
 
-const CARD_WIDTH = 150;
+const CARD_WIDTH = 90;
 const BROADCAST_CARD_WIDTH = 500;
 const cardStyle: React.CSSProperties = {
     width: CARD_WIDTH,
