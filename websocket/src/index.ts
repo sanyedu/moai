@@ -1,71 +1,40 @@
 import WebSocket, { WebSocketServer } from 'ws'
+import dotenv from 'dotenv'
+import { WebSocketClient, DataMsg } from './WebSocketClient'
+dotenv.config()
 
-interface DataMsg {
-  type: string
-  name: string
-  id: string
-  data: string
-}
+// Create a WebSocket server on port
+const port = parseInt(process.env.SERVER_PORT!)
+const wss = new WebSocketServer({ port: port })
 
-// Create a WebSocket server on port 8080
-const wssTeacher = new WebSocketServer({ port: 8080 })
+//all clients: both students and teachers
+const allClients: WebSocketClient[] = []
 
-wssTeacher.on('connection', (ws: WebSocket, req) => {
-  console.log(`teacher connected on url: ${req.url}. total teachers: ${wssTeacher.clients.size}`)
-  ws.on('message', (message: string) => {
-    try {
-      const data: DataMsg = JSON.parse(message)
-      const messageToBroadcast = JSON.stringify(data)
+const allStudentSnapshots: DataMsg[] = []
+wss.on('connection', (ws: WebSocket, req) => {
+    const client = new WebSocketClient(allClients, allStudentSnapshots, ws, req.url!)
+    allClients.push(client)
 
-      wssStudent.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(messageToBroadcast)
-        }
-      })
-      console.log(`messages are sent to teacher. id: ${data.id}, name: ${data.name}`)
-    } catch (error) {
-      console.error('Failed to parse incoming message:', error)
-    }
-  })
+    console.log(
+        `client connection is open on url: ${client.url}, className: ${client.className}, isTeacher: ${client.isTeacher}.`
+    )
+    ws.on('close', () => {
+        const index = allClients.findIndex((client) => client.ws === ws)
+        allClients[index].onDestroyed()
+        allClients.splice(index, 1)
+    })
+    ws.on('error', (error: Error) => {
+        console.log('error: ', error)
+        ws.terminate()
+    })
 
-  ws.on('close', () => {
-    console.log('teacher client disconnected.')
-  })
-
-  ws.on('error', (error: Error) => {
-    console.log('Teacher WebSocket error: ', error)
-  })
+    console.log(`total clients: ${allClients.length}`)
 })
 
-console.log('Teacher WebSocket server is running on ws://localhost:8080')
-
-const wssStudent = new WebSocketServer({ port: 8081 })
-
-wssStudent.on('connection', (ws: WebSocket, req) => {
-  console.log(`student connected on url: ${req.url}. total students: ${wssStudent.clients.size}`)
-  ws.on('message', (message: string) => {
-    try {
-      const data: DataMsg = JSON.parse(message)
-      const messageToBroadcast = JSON.stringify(data)
-
-      wssTeacher.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(messageToBroadcast)
-        }
-      })
-      console.log(`messages are sent to teacher. id: ${data.id}, name: ${data.name}`)
-    } catch (error) {
-      console.error('Failed to parse incoming message:', error)
-    }
-  })
-
-  ws.on('close', () => {
-    console.log('Student client disconnected.')
-  })
-
-  ws.on('error', (error: Error) => {
-    console.log('Student WebSocket error: ', error)
-  })
+wss.on('close', function close() {
+    allClients.forEach((client) => {
+        client.onDestroyed()
+    })
 })
 
-console.log('Student WebSocket server is running on ws://localhost:8081')
+console.log('WebSocket server is running on ws://localhost:' + port)
