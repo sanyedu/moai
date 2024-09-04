@@ -49,7 +49,7 @@ export class WebSocketClient {
             this.ws.send(
                 JSON.stringify({
                     type: 'BROADCAST_IMAGE',
-                    name: this.className,
+                    name: encodeURI(this.className),
                     id: this.studentId,
                     data: image,
                 })
@@ -65,7 +65,7 @@ export class WebSocketClient {
             this.ws.send(
                 JSON.stringify({
                     type: 'BROADCAST_TEXT',
-                    name: this.className,
+                    name: encodeURI(this.className),
                     id: this.studentId,
                     data: text,
                 })

@@ -44,6 +44,7 @@ type FieldType = {
 }
 
 export default function Home({ params }: { params: { name: string } }) {
+    const className = decodeURI(params.name)
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
     const [isConnecting, setIsConnecting] = useState<boolean>(true)
     const [client, setClient] = useState<WebSocketClient | null>(null)
@@ -53,7 +54,7 @@ export default function Home({ params }: { params: { name: string } }) {
     const [broadcastImage, setBroadcastImage] = useState<string>('/placeholder.svg')
 
     useEffect(() => {
-        fetch('/api/get-class-students?class=' + params.name)
+        fetch('/api/get-class-students?class=' + className)
             .then((response) => response.json())
             .then((data) => {
                 const students = data.map((s: Student) => {
@@ -71,7 +72,7 @@ export default function Home({ params }: { params: { name: string } }) {
     function connect_server(students: Student[]) {
         setIsConnecting(true)
         //connect
-        const client = new WebSocketClient(params.name, true)
+        const client = new WebSocketClient(className, true)
         client.ws.onopen = () => {
             console.log('connection is opened.')
             setClient(client)
@@ -182,7 +183,7 @@ export default function Home({ params }: { params: { name: string } }) {
         <div>
             {isAuthenticated ? (
                 <div>
-                    <h1>{params.name}</h1>
+                    <h1>{className}</h1>
                     {isConnecting ? (
                         <Spin tip="正在连接服务器..." size="large">
                             {spinContent}

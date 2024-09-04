@@ -33,6 +33,7 @@ interface Student {
 }
 
 export default function Home({ params }: { params: { name: string } }) {
+    const className = decodeURI(params.name)
     const [isConnecting, setIsConnecting] = useState<boolean>(true)
     const [client, setClient] = useState<WebSocketClient | null>(null)
     const [students, setStudents] = useState<Student[]>([])
@@ -46,7 +47,7 @@ export default function Home({ params }: { params: { name: string } }) {
     stateRef.current = logs
 
     useEffect(() => {
-        fetch('/api/get-class-students?class=' + params.name)
+        fetch('/api/get-class-students?class=' + encodeURI(className))
             .then((response) => response.json())
             .then((data) => {
                 setStudents(data)
@@ -114,7 +115,7 @@ export default function Home({ params }: { params: { name: string } }) {
     function connect_server(id: string) {
         setIsConnecting(true)
         //connect
-        const client = new WebSocketClient(params.name, false, id)
+        const client = new WebSocketClient(className, false, id)
         client.ws.onopen = () => {
             console.log('connection is opened.')
             setClient(client)
@@ -133,8 +134,6 @@ export default function Home({ params }: { params: { name: string } }) {
         client.ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data)
-                // if (data.name != params.name)
-                //     throw new Error(`${data.name} != ${params.name}`);
                 if (data.type == 'BROADCAST_IMAGE') {
                     setBroadcastImage(data.data)
                     logSuccess('收到广播图片')
@@ -156,7 +155,7 @@ export default function Home({ params }: { params: { name: string } }) {
     if (!selectedStudent)
         return (
             <div>
-                <h1>{params.name}</h1>
+                <h1>{className}</h1>
                 <Flex gap="small" wrap>
                     {students.map((student) => (
                         <Button key={student.id} data-id={student.id} onClick={handleStudentClick}>
@@ -169,7 +168,7 @@ export default function Home({ params }: { params: { name: string } }) {
     else
         return (
             <div>
-                <h1>{params.name}</h1>
+                <h1>{className}</h1>
                 {isConnecting ? (
                     <Spin tip="正在连接服务器..." size="large">
                         {spinContent}

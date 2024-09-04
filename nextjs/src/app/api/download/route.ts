@@ -8,7 +8,6 @@ export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url)
         const file = searchParams.get('file')
-
         // Resolve the file path (make sure the file path is secure)
         const filePath = join(process.cwd(), 'data', `${file}`)
 
@@ -24,7 +23,7 @@ export async function GET(req: NextRequest) {
         const response = new NextResponse(fileBuffer, {
             status: 200,
             headers: {
-                'Content-Disposition': `attachment; filename="${file}"`,
+                'Content-Disposition': `attachment; filename="${encodeURI(file!)}"`,
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             },
         })

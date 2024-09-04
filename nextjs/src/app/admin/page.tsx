@@ -23,7 +23,7 @@ export default function Home() {
         console.log(e)
         message.error('删除操作已取消')
     }
-    const props: UploadProps = {
+    const uploadProps: UploadProps = {
         name: 'file',
         action: '/api/upload',
         headers: {
@@ -90,9 +90,9 @@ export default function Home() {
                     <Title>班级列表</Title>
                     <Paragraph>
                         <ul>
-                            {classes.map((name) => (
+                            {classes.map((name: string) => (
                                 <li key={name}>
-                                    {name} | <Link href={'/api/download?file=' + name + '.xlsx'}>下载</Link> |{' '}
+                                    {name}: <Link href={'/api/download?file=' + name + '.xlsx'}>下载</Link> |
                                     <Popconfirm
                                         title="删除班级"
                                         description={`确定删除${name}吗？此操作无法撤销。`}
@@ -110,7 +110,7 @@ export default function Home() {
                         </ul>
                     </Paragraph>
 
-                    <Upload {...props}>
+                    <Upload {...uploadProps}>
                         <Button icon={<UploadOutlined />}>上传班级Excel文件</Button>
                     </Upload>
                 </Typography>
