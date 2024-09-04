@@ -4,12 +4,19 @@ import React from 'react'
 import { UploadOutlined } from '@ant-design/icons'
 
 import type { PopconfirmProps, UploadProps } from 'antd'
-import { Button, Typography, message, Popconfirm, Upload } from 'antd'
+import type { FormProps } from 'antd'
+import { Button, Typography, message, Popconfirm, Upload, Form, Checkbox, Input } from 'antd'
 import { useEffect, useState } from 'react'
 
 const { Title, Paragraph, Text, Link } = Typography
 
+type FieldType = {
+    password?: string
+    remember?: string
+}
+
 export default function Home() {
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
     const [classes, setClasses] = useState<string[]>([])
 
     const cancel: PopconfirmProps['onCancel'] = (e) => {
@@ -64,34 +71,75 @@ export default function Home() {
             })
     }
 
-    return (
-        <Typography>
-            <Title>班级列表</Title>
-            <Paragraph>
-                <ul>
-                    {classes.map((name) => (
-                        <li key={name}>
-                            {name} | <Link href={'/api/download?file=' + name + '.xlsx'}>下载</Link> |{' '}
-                            <Popconfirm
-                                title="删除班级"
-                                description={`确定删除${name}吗？此操作无法撤销。`}
-                                onConfirm={(e) => handleDelClick(name)}
-                                onCancel={cancel}
-                                okText="Yes"
-                                cancelText="No"
-                            >
-                                <Button type="link" danger>
-                                    删除
-                                </Button>
-                            </Popconfirm>
-                        </li>
-                    ))}
-                </ul>
-            </Paragraph>
+    const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+        if (values.password === process.env.NEXT_PUBLIC_TOKEN) {
+            setIsAuthenticated(true)
+            message.info('通过验证')
+        } else {
+            message.error('密码错误')
+        }
+    }
+    const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
+        message.error('请输入密码')
+    }
 
-            <Upload {...props}>
-                <Button icon={<UploadOutlined />}>上传班级Excel文件</Button>
-            </Upload>
-        </Typography>
+    return (
+        <div>
+            {isAuthenticated ? (
+                <Typography>
+                    <Title>班级列表</Title>
+                    <Paragraph>
+                        <ul>
+                            {classes.map((name) => (
+                                <li key={name}>
+                                    {name} | <Link href={'/api/download?file=' + name + '.xlsx'}>下载</Link> |{' '}
+                                    <Popconfirm
+                                        title="删除班级"
+                                        description={`确定删除${name}吗？此操作无法撤销。`}
+                                        onConfirm={(e) => handleDelClick(name)}
+                                        onCancel={cancel}
+                                        okText="Yes"
+                                        cancelText="No"
+                                    >
+                                        <Button type="link" danger>
+                                            删除
+                                        </Button>
+                                    </Popconfirm>
+                                </li>
+                            ))}
+                        </ul>
+                    </Paragraph>
+
+                    <Upload {...props}>
+                        <Button icon={<UploadOutlined />}>上传班级Excel文件</Button>
+                    </Upload>
+                </Typography>
+            ) : (
+                <Form
+                    name="basic"
+                    labelCol={{ span: 8 }}
+                    wrapperCol={{ span: 16 }}
+                    style={{ maxWidth: 600 }}
+                    initialValues={{ remember: true }}
+                    onFinish={onFinish}
+                    onFinishFailed={onFinishFailed}
+                    autoComplete="off"
+                >
+                    <Form.Item<FieldType>
+                        label="输入密码"
+                        name="password"
+                        rules={[{ required: true, message: 'Please input your password!' }]}
+                    >
+                        <Input.Password />
+                    </Form.Item>
+
+                    <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+                        <Button type="primary" htmlType="submit">
+                            Submit
+                        </Button>
+                    </Form.Item>
+                </Form>
+            )}
+        </div>
     )
 }

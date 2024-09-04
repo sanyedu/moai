@@ -7,7 +7,7 @@ import { useEffect, useState, useRef } from 'react'
 import { WebSocketClient } from './WebSocketClient'
 const { TextArea } = Input
 
-const CARD_WIDTH = 500
+const CARD_WIDTH = 300
 const cardStyle: React.CSSProperties = {
     width: CARD_WIDTH,
 }
@@ -234,7 +234,7 @@ export default function Home({ params }: { params: { name: string } }) {
                                     <Typography>
                                         <Title level={3}>操作日志</Title>
                                     </Typography>
-                                    <TextArea readOnly rows={25} style={{ resize: 'none' }} value={logs.join('\n')} />
+                                    <TextArea readOnly rows={15} style={{ resize: 'none' }} value={logs.join('\n')} />
                                 </Flex>
                             </Card>
                         </Flex>
@@ -266,7 +266,7 @@ export default function Home({ params }: { params: { name: string } }) {
                                     <Typography>
                                         <Title level={2}>文本广播</Title>
                                     </Typography>
-                                    <TextArea readOnly rows={25} style={{ resize: 'none' }} value={broadcastText} />
+                                    <TextArea readOnly rows={15} style={{ resize: 'none' }} value={broadcastText} />
                                 </Flex>
                             </Card>
                         </Flex>

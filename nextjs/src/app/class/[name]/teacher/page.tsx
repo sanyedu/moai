@@ -1,9 +1,10 @@
 'use client'
 
 import React from 'react'
-import { Image, Card, Flex, Typography, Input, Button, Alert, Spin } from 'antd'
+import { Image, Card, Flex, Typography, Input, Button, Alert, Spin, Form, Checkbox, message } from 'antd'
 const { Title, Paragraph, Text, Link } = Typography
-import { useEffect, useState, useCallback } from 'react'
+import type { FormProps } from 'antd'
+import { useEffect, useState } from 'react'
 import { WebSocketClient } from '../WebSocketClient'
 const { TextArea } = Input
 
@@ -37,7 +38,13 @@ interface Student {
     src: string
 }
 
+type FieldType = {
+    password?: string
+    remember?: string
+}
+
 export default function Home({ params }: { params: { name: string } }) {
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
     const [isConnecting, setIsConnecting] = useState<boolean>(true)
     const [client, setClient] = useState<WebSocketClient | null>(null)
     const [students, setStudents] = useState<Student[]>([])
@@ -156,105 +163,154 @@ export default function Home({ params }: { params: { name: string } }) {
                 return s
             })
         )
+        message.success('操作成功')
+    }
+
+    const onFinish: FormProps<FieldType>['onFinish'] = (values) => {
+        if (values.password === process.env.NEXT_PUBLIC_TOKEN) {
+            setIsAuthenticated(true)
+            message.info('通过验证')
+        } else {
+            message.error('密码错误')
+        }
+    }
+    const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
+        message.error('请输入密码')
     }
 
     return (
         <div>
-            <h1>{params.name}</h1>
-            {isConnecting ? (
-                <Spin tip="正在连接服务器..." size="large">
-                    {spinContent}
-                </Spin>
-            ) : (
-                <Flex gap="small">
-                    <Alert
-                        message={client !== null ? '连接成功' : '无法连接服务器'}
-                        type={client !== null ? 'success' : 'error'}
-                        showIcon
-                    />
-                    {client === null ? (
-                        <Button type="primary" onClick={handleConnectClick}>
-                            连接服务器
-                        </Button>
-                    ) : null}
-                </Flex>
-            )}
+            {isAuthenticated ? (
+                <div>
+                    <h1>{params.name}</h1>
+                    {isConnecting ? (
+                        <Spin tip="正在连接服务器..." size="large">
+                            {spinContent}
+                        </Spin>
+                    ) : (
+                        <Flex gap="small">
+                            <Alert
+                                message={client !== null ? '连接成功' : '无法连接服务器'}
+                                type={client !== null ? 'success' : 'error'}
+                                showIcon
+                            />
+                            {client === null ? (
+                                <Button type="primary" onClick={handleConnectClick}>
+                                    连接服务器
+                                </Button>
+                            ) : null}
+                        </Flex>
+                    )}
 
-            <Flex wrap gap="small">
-                <Image.PreviewGroup
-                    preview={{
-                        onChange: (current, prev) => console.log(`current index: ${current}, prev index: ${prev}`),
-                    }}
-                >
-                    {students.map((student) => (
+                    <Button type="primary" onClick={handleClearSnapshotClick}>
+                        清空剪贴板
+                    </Button>
+
+                    <Flex wrap gap="small">
+                        <Image.PreviewGroup
+                            preview={{
+                                onChange: (current, prev) =>
+                                    console.log(`current index: ${current}, prev index: ${prev}`),
+                            }}
+                        >
+                            {students.map((student) => (
+                                <Card
+                                    key={student.id}
+                                    hoverable
+                                    style={cardStyle}
+                                    styles={{
+                                        body: { padding: 5, overflow: 'hidden' },
+                                    }}
+                                >
+                                    <Flex vertical={true}>
+                                        <Typography>
+                                            <Title level={3}>{student.name}</Title>
+                                        </Typography>
+                                        <Image
+                                            alt={student.id}
+                                            src={student.src}
+                                            width={CARD_WIDTH}
+                                            height={CARD_WIDTH}
+                                        />
+                                    </Flex>
+                                </Card>
+                            ))}
+                        </Image.PreviewGroup>
+                    </Flex>
+                    <Flex wrap gap="small">
                         <Card
-                            key={student.id}
+                            id="card"
                             hoverable
-                            style={cardStyle}
+                            style={broadcastCardStyle}
                             styles={{
                                 body: { padding: 5, overflow: 'hidden' },
                             }}
                         >
                             <Flex vertical={true}>
                                 <Typography>
-                                    <Title level={3}>{student.name}</Title>
+                                    <Title level={2}>图片广播</Title>
                                 </Typography>
-                                <Image alt={student.id} src={student.src} width={CARD_WIDTH} height={CARD_WIDTH} />
+                                <textarea
+                                    placeholder="使用Ctrl+V在这里粘贴图片"
+                                    style={textareaPasteImgStyle}
+                                    onPaste={handlePaste}
+                                    onChange={(e) => setPlaceHolderText('')}
+                                    value={placeHolderText}
+                                ></textarea>
+                                <Image
+                                    alt="图片广播"
+                                    src={broadcastImage}
+                                    width={BROADCAST_CARD_WIDTH}
+                                    height={BROADCAST_CARD_WIDTH}
+                                />
                             </Flex>
                         </Card>
-                    ))}
-                </Image.PreviewGroup>
-            </Flex>
-            <Flex wrap gap="small">
-                <Card
-                    id="card"
-                    hoverable
-                    style={broadcastCardStyle}
-                    styles={{
-                        body: { padding: 5, overflow: 'hidden' },
-                    }}
-                >
-                    <Flex vertical={true}>
-                        <Button type="primary" onClick={handleClearSnapshotClick}>
-                            清空快照
-                        </Button>
-                        <Typography>
-                            <Title level={2}>图片广播</Title>
-                        </Typography>
-                        <textarea
-                            placeholder="使用Ctrl+V在这里粘贴图片"
-                            style={textareaPasteImgStyle}
-                            onPaste={handlePaste}
-                            onChange={(e) => setPlaceHolderText('')}
-                            value={placeHolderText}
-                        ></textarea>
-                        <Image
-                            alt="图片广播"
-                            src={broadcastImage}
-                            width={BROADCAST_CARD_WIDTH}
-                            height={BROADCAST_CARD_WIDTH}
-                        />
+                        <Card
+                            id="card"
+                            hoverable
+                            style={broadcastCardStyle}
+                            styles={{
+                                body: { padding: 5, overflow: 'hidden' },
+                            }}
+                        >
+                            <Flex vertical={true}>
+                                <Typography>
+                                    <Title level={2}>文本广播</Title>
+                                </Typography>
+                                <Button type="primary" onClick={handleBroadcastTextClick}>
+                                    Send Broadcast
+                                </Button>
+                                <TextArea id="textAreaBroadcast" rows={23} style={{ resize: 'none' }} />
+                            </Flex>
+                        </Card>
                     </Flex>
-                </Card>
-                <Card
-                    id="card"
-                    hoverable
-                    style={broadcastCardStyle}
-                    styles={{
-                        body: { padding: 5, overflow: 'hidden' },
-                    }}
+                </div>
+            ) : (
+                <Form
+                    name="basic"
+                    labelCol={{ span: 8 }}
+                    wrapperCol={{ span: 16 }}
+                    style={{ maxWidth: 600 }}
+                    initialValues={{ remember: true }}
+                    onFinish={onFinish}
+                    onFinishFailed={onFinishFailed}
+                    autoComplete="off"
                 >
-                    <Flex vertical={true}>
-                        <Typography>
-                            <Title level={2}>文本广播</Title>
-                        </Typography>
-                        <Button type="primary" onClick={handleBroadcastTextClick}>
-                            Send Broadcast
+                    <Form.Item<FieldType>
+                        label="输入密码"
+                        name="password"
+                        rules={[{ required: true, message: 'Please input your password!' }]}
+                    >
+                        <Input.Password />
+                    </Form.Item>
+
+                    <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+                        <Button type="primary" htmlType="submit">
+                            Submit
                         </Button>
-                        <TextArea id="textAreaBroadcast" rows={23} style={{ resize: 'none' }} />
-                    </Flex>
-                </Card>
-            </Flex>
+                    </Form.Item>
+                </Form>
+            )}
         </div>
     )
 }
