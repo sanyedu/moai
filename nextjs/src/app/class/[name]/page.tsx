@@ -189,7 +189,7 @@ export default function Home({ params }: { params: { name: string } }) {
                     </Flex>
                 )}
 
-                {client === null ? (
+                {client === null && !isConnecting ? (
                     <Alert message="错误" description="请检查网络。" type="error" showIcon />
                 ) : (
                     <div>

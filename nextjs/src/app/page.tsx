@@ -1,22 +1,38 @@
-"use client";
+'use client'
 
-import React from "react";
-import { Divider, Typography } from "antd";
+import React from 'react'
+import { Typography } from 'antd'
+import { useEffect, useState } from 'react'
 
-const { Title, Paragraph, Text, Link } = Typography;
+const { Title, Paragraph, Text, Link } = Typography
 
 export default function Home() {
+    const [classes, setClasses] = useState<string[]>([])
+
+    useEffect(() => {
+        fetch('/api/class')
+            .then((response) => response.json())
+            .then((data) => {
+                setClasses(data)
+            })
+            .catch((error) => {
+                console.error('Error fetching classes:', error)
+            })
+    }, [])
+
     return (
         <Typography>
             <Title>班级列表</Title>
 
             <Paragraph>
                 <ul>
-                    <li>
-                        <Link href="/class/software-2304">软件技术2304班</Link>
-                    </li>
+                    {classes.map((name) => (
+                        <li key={name}>
+                            <Link href={'/class/' + name}>{name}</Link>
+                        </li>
+                    ))}
                 </ul>
             </Paragraph>
         </Typography>
-    );
+    )
 }
