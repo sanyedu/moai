@@ -110,6 +110,11 @@ export default function Home() {
                         </ul>
                     </Paragraph>
 
+                    <p style={{ color: 'red' }}>
+                        注意：上传Excel文件名即为课程名，只接受英文、数字、短横线和下划线。
+                        <br />
+                        不接受中文和特殊字符！！
+                    </p>
                     <Upload {...uploadProps}>
                         <Button icon={<UploadOutlined />}>上传班级Excel文件</Button>
                     </Upload>

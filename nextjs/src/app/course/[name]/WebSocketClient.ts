@@ -20,7 +20,7 @@ export class WebSocketClient {
         this.className = className
         this.isTeacher = isTeacher
 
-        const endpoint = `${process.env.NEXT_PUBLIC_WS_ENDPOINT}/${className}${isTeacher ? '/teacher' : ''}`
+        const endpoint = `${process.env.NEXT_PUBLIC_WS_ENDPOINT}/course/${className}${isTeacher ? '/teacher' : ''}`
         console.log(`conncet to ws server: ${endpoint}`)
         this.ws = new WebSocket(endpoint)
     }
@@ -49,7 +49,7 @@ export class WebSocketClient {
             this.ws.send(
                 JSON.stringify({
                     type: 'BROADCAST_IMAGE',
-                    name: encodeURI(this.className),
+                    name: this.className,
                     id: this.studentId,
                     data: image,
                 })
@@ -65,7 +65,7 @@ export class WebSocketClient {
             this.ws.send(
                 JSON.stringify({
                     type: 'BROADCAST_TEXT',
-                    name: encodeURI(this.className),
+                    name: this.className,
                     id: this.studentId,
                     data: text,
                 })

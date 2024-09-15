@@ -33,8 +33,8 @@ export default function Home() {
                         {classes.map((name) => (
                             <li key={name}>
                                 <span style={spinContentStyle}>{name}:</span>
-                                <Link href={'/class/' + name}>学生入口</Link> |
-                                <Link href={'/class/' + name + '/teacher'}>教师入口</Link>
+                                <Link href={'/course/' + name}>学生入口</Link> |
+                                <Link href={'/course/' + name + '/teacher'}>教师入口</Link>
                             </li>
                         ))}
                     </ul>

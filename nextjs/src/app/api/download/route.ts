@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
         const response = new NextResponse(fileBuffer, {
             status: 200,
             headers: {
-                'Content-Disposition': `attachment; filename="${encodeURI(file!)}"`,
+                'Content-Disposition': `attachment; filename="${file!}"`,
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             },
         })

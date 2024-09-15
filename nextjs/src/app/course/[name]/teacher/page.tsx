@@ -44,7 +44,7 @@ type FieldType = {
 }
 
 export default function Home({ params }: { params: { name: string } }) {
-    const className = decodeURI(params.name)
+    const className = params.name
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
     const [isConnecting, setIsConnecting] = useState<boolean>(true)
     const [client, setClient] = useState<WebSocketClient | null>(null)

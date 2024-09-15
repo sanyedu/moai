@@ -33,7 +33,7 @@ interface Student {
 }
 
 export default function Home({ params }: { params: { name: string } }) {
-    const className = decodeURI(params.name)
+    const className = params.name
     const [isConnecting, setIsConnecting] = useState<boolean>(true)
     const [client, setClient] = useState<WebSocketClient | null>(null)
     const [students, setStudents] = useState<Student[]>([])
@@ -47,7 +47,7 @@ export default function Home({ params }: { params: { name: string } }) {
     stateRef.current = logs
 
     useEffect(() => {
-        fetch('/api/get-class-students?class=' + encodeURI(className))
+        fetch('/api/get-class-students?class=' + className)
             .then((response) => response.json())
             .then((data) => {
                 setStudents(data)
