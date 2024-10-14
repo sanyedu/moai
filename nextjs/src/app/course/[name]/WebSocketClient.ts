@@ -15,7 +15,6 @@ export class WebSocketClient {
 
     constructor(className: string, isTeacher: boolean, studentId?: string) {
         // Create WebSocket connection
-        // const endpoint = process.env.NEXT_PUBLIC_WS_ENDPOINT! + "/" + params.name;
         this.studentId = studentId
         this.className = className
         this.isTeacher = isTeacher
