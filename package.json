@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "build": "remix vite:build",
-        "dev": "set DEBUG=*OAuth2Strategy && remix vite:dev --port 3000",
+        "dev": "set DEBUG=*OAuth2Strategy && remix vite:dev --host 0.0.0.0 --port 3000",
         "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
         "start": "remix-serve ./build/server/index.js",
         "typecheck": "tsc"
@@ -18,11 +18,11 @@
         "antd-demo": "file:",
         "assert": "^2.1.0",
         "isbot": "^4.1.0",
-        "jwt-decode": "^4.0.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "remix-auth": "^3.7.0",
-        "remix-auth-oauth2": "^2.4.0"
+        "remix-auth-oauth2": "^2.4.0",
+        "sst": "3.3.5"
     },
     "devDependencies": {
         "@remix-run/dev": "^2.13.1",

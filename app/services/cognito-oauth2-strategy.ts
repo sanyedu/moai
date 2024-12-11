@@ -6,7 +6,6 @@ import {
     TokenResponseBody
 } from 'remix-auth-oauth2'
 import type { StrategyVerifyCallback } from 'remix-auth'
-import type { JwtPayload } from 'jwt-decode'
 import assert from 'assert'
 
 const debug = createDebug('CognitoOAuth2Strategy')

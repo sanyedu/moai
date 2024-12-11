@@ -1,0 +1,15 @@
+PROJECT_ROOT:=$(shell cygpath -m $(PWD))
+AWS_CONF:=$(shell cygpath -m $(HOME)/.aws)
+IMAGE:=sst-ci
+
+DOCKER_CMD:=docker run -ti --rm \
+	-v $(PROJECT_ROOT):/app \
+	-v $(AWS_CONF):/root/.aws \
+	-p 3000:3000 \
+	$(IMAGE)
+
+.PHONY: build bash
+build:
+	docker build -t $(IMAGE) .
+bash:
+	$(DOCKER_CMD) bash
